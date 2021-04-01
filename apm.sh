@@ -1,26 +1,43 @@
 #!/bin/bash
 
 #Process ID List
-apmpid=$@
+pid=$@
+#mem=$@
+#cpu=$@
+tx=$@
+rx=$@
 
+
+mkdir out
 #Spawning processes
 for i in $(seq 1 6);
 do	
 	#Runs every process and adds it to the apmpid list
 	"./cexe/APM$i" 192.168.136.129 & temp=`echo $!`
-	apmpid+=($temp)
+	pid+=($temp)
 	echo "Process ID $i: $temp"
+	touch out/"APM$i""_metrics.csv"
 done
 
-#Kills processes
-for i in "${apmpid[@]}";
-do
-	# Check if the variable is empty and continue
-	if [ -z "$i" ]
-	then		
-		continue
-	fi
-	#Kill process and send any strange outputs to devnull
-	kill -9 $i > /dev/null 2>&1
-	echo "Proccess $i killed."
-done
+
+process_metrics (){
+	i=0	
+	while [ $i -lt ${#pid[@]} ]
+	do
+		echo ${pid[$i]} 
+		ps -q ${pid[$i]} -o %cpu | tail -n +2
+		ps -q ${pid[$i]} -o %mem | tail -n +2
+		
+		((i=$i+1))
+	
+	done
+}
+
+
+
+#while true
+#do
+	process_metrics
+#done
+
+
