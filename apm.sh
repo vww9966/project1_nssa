@@ -2,11 +2,6 @@
 
 #Process ID List
 pid=$@
-#mem=$@
-#cpu=$@
-tx=$@
-rx=$@
-
 
 mkdir out
 #Spawning processes
@@ -21,23 +16,22 @@ done
 
 
 process_metrics (){
-	i=0	
+	i=1
 	while [ $i -lt ${#pid[@]} ]
 	do
-		echo ${pid[$i]} 
-		ps -q ${pid[$i]} -o %cpu | tail -n +2
-		ps -q ${pid[$i]} -o %mem | tail -n +2
-		
+		temppid=${pid[$i]} 
+		echo "$temppid"
+		temp1=$(ps -q $temppid -o %cpu | tail -n +2)
+		temp2=$(ps -q $temppid -o %mem | tail -n +2)
+		echo "$temp1,$temp2" >> out/"APM$i""_metrics.csv"
 		((i=$i+1))
-	
 	done
 }
 
-
-
-#while true
-#do
+while true
+do
 	process_metrics
-#done
+done
 
+pkill -f APM
 
