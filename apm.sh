@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# NSSA 220 PROJECT 1
+#
+# VAUGHN WOERPEL, MARK HOLLOWAY, RICK WALLERT
+
 #Process ID List
 pid=$@
 
@@ -13,7 +17,6 @@ spawn_process () {
 		#Runs every process and adds it to the pid list
 		"./cexe/APM$i" 192.168.136.129 & temp=`echo $!`
 		pid+=($temp)
-		#echo "Process ID $i: $temp"
 		#Creates the file for the APM metrics CSV
 		touch out/"APM$i""_metrics.csv"
 	done
@@ -39,7 +42,7 @@ process_metrics (){
 #Gathers overall system metrics and writes to the csv file
 system_metrics (){
 	#Gets network usage statistics and formats it
-	networkline=$(ifstat | sed -n '/ens/s/ \+/ /gp')
+	networkline=$(ifstat | sed -n '/ens/s/ \+/ /gp' > /dev/null 2>&1) 
 	#Formats rx and tx network usage from the overall usage statistics
 	rx=$(echo $networkline | cut -d " " -f 6)
 	tx=$(echo $networkline | cut -d " " -f 8)
@@ -52,14 +55,23 @@ system_metrics (){
 	echo "$1,$rx,$tx,$hdwrite,$hdutil" >> "out/system_metrics.csv"
 }
 
+
+#Exit trap
+cleanup () {
+	#Kills all of the processes
+	pkill -f APM > /dev/null 2>&1
+	echo "Processes Killed"
+}
+trap cleanup EXIT
+
 #Spawns the processes
 spawn_process
 #Main run portion of the file, runs once a second
 v=0
+#Notification about running program
+echo "Program running (Ctrl + C to exit)"
 while sleep 1
 do
-	echo $v
-	#echo $(($v%5))
 	#Runs this portion every 5 seconds for the process metrics
 	if ! (($v % 5));
 	then	
@@ -70,5 +82,4 @@ do
 	((v=$v+1))
 done
 
-pkill -f APM
 
